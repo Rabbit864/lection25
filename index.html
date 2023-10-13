@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+
+    <title>reveal.js</title>
+
+    <link rel="stylesheet" href="dist/reset.css" />
+    <link rel="stylesheet" href="dist/reveal.css" />
+    <link rel="stylesheet" href="dist/theme/black.css" />
+
+    <!-- Theme used for syntax highlighted code -->
+    <link rel="stylesheet" href="plugin/highlight/monokai.css" />
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section>
+          <div>
+            <h1>Live chat</h1>
+          </div>
+        </section>
+        <section>
+          <h3>Websocket</h3>
+          <p>
+            WebSocket — протокол связи поверх TCP-соединения, предназначенный
+            для обмена сообщениями между браузером и веб-сервером, используя
+            постоянное соединение.
+          </p>
+        </section>
+        <section>
+          <h3>Где используется</h3>
+          <p>
+            WebSocket особенно хорош для сервисов, которые нуждаются в
+            постоянном обмене данными, например онлайн игры, торговые площадки,
+            работающие в реальном времени, и т.д.
+          </p>
+        </section>
+        <section>
+          <h3>Симпл пример</h3>
+          <p>
+			Чтобы открыть веб-сокет-соединение, нужно создать объект new WebSocket, указав в url-адресе специальный протокол ws:
+            <pre>
+				<code data-line-numbers="">let socket = new WebSocket("ws://javascript.info");
+				</code>
+			</pre>
+          </p>
+        </section>
+		<section>
+			<h3>WSS</h3>
+			<p>
+				Также существует протокол wss://, использующий шифрование. Это как HTTPS для веб-сокетов.
+			</p>
+			<p>
+				Всегда предпочитайте wss
+			</p>
+		</section>
+		<section>
+			<h3>События в WebSocket</h3>
+			<p>
+				Как только объект WebSocket создан, мы должны слушать его события. Их всего 4:
+			</p>
+			<ul>
+				<li><b>open</b> – соединение установлено,</li>
+				<li><b>message</b> – получены данные,</li>
+				<li><b>error</b> – ошибка,</li>
+				<li><b>close</b> – соединение закрыто.</li>
+			</ul>
+			<p>Eсли мы хотим отправить что-нибудь, то вызов socket.send(data) сделает это.</p>
+		</section>
+		<section>
+			<h4>Пример с событиями</h4>
+			<pre><code data-line-numbers="1-2|3-7|9-11|13-21|23-25">let socket = new WebSocket("wss://javascript.info/websocket/demo/hello");
+
+socket.onopen = function(e) {
+	alert("[open] Соединение установлено");
+	alert("Отправляем данные на сервер");
+	socket.send("Меня зовут Джон");
+};
+				
+socket.onmessage = function(event) {
+	alert(`[message] Данные получены с сервера: ${event.data}`);
+};
+				
+socket.onclose = function(event) {
+	if (event.wasClean) {
+		alert(`[close] Соединение закрыто чисто, код=${event.code} причина=${event.reason}`);
+	} else {
+		// например, сервер убил процесс или сеть недоступна
+		// обычно в этом случае event.code 1006
+		alert('[close] Соединение прервано');
+	}
+};
+				
+socket.onerror = function(error) {
+	alert(`[error]`);
+};
+			</code></pre>
+		</section>
+		<section>
+			<h3>Как это выглядит</h3>
+			<svg xmlns="http://www.w3.org/2000/svg" width="429" height="348" viewBox="0 0 429 348"><defs><style>@import url(https://fonts.googleapis.com/css?family=Open+Sans:bold,italic,bolditalic%7CPT+Mono);@font-face{font-family:'PT Mono';font-weight:700;font-style:normal;src:local('PT MonoBold'),url(/font/PTMonoBold.woff2) format('woff2'),url(/font/PTMonoBold.woff) format('woff'),url(/font/PTMonoBold.ttf) format('truetype')}</style></defs><g id="network" fill="none" fill-rule="evenodd" stroke="none" stroke-width="1"><g id="websocket-handshake.svg"><path id="Rectangle-227" fill="#252732" stroke="#4b4e65" stroke-width="2" d="M2 16h128v64H2z"/><text id="Browser" fill="#7a7f9c" font-family="OpenSans-Regular, Open Sans" font-size="14" font-weight="normal"><tspan x="39" y="49">Браузер</tspan></text><path id="Rectangle-228" fill="#252732" stroke="#4b4e65" stroke-width="2" d="M298 16h128v64H298z"/><text id="Server" fill="#7a7f9c" font-family="OpenSans-Regular, Open Sans" font-size="14" font-weight="normal"><tspan x="336" y="49">Сервер</tspan></text><path id="Line" stroke="#82807f" stroke-linecap="square" d="M67 81v250.5M363 81v251.5"/><path id="Line" fill="#7a7f9c" fill-rule="nonzero" d="M349 133l14 7-14 7v-6H68v-2h281v-6z"/><path id="Line-Copy" fill="#7a7f9c" fill-rule="nonzero" d="M83 204v6h281v2H83v6l-14-7 14-7z"/><text id="HTTP-request" fill="#7a7f9c" font-family="OpenSans-Regular, Open Sans" font-size="14" font-weight="normal"><tspan x="174.015" y="130">HTTP-запрос</tspan></text><text id="&quot;Hey,-server,-let's" fill="#7a7f9c" font-family="OpenSans-Regular, Open Sans" font-size="14" font-weight="normal"><tspan x="71.105" y="161">"Сервер, давай поговорим на WebSocket?"</tspan></text><text id="HTTP-response-&quot;Okay!" fill="#7a7f9c" font-family="OpenSans-Regular, Open Sans" font-size="14" font-weight="normal"><tspan x="178.419" y="204">HTTP-ответ</tspan> <tspan x="192.972" y="226">Давай!</tspan></text><path id="Line-Copy-2" fill="#7a7f9c" fill-rule="nonzero" d="M81 272v6h2v2h-2v6l-14-7 14-7zm268 0l14 7-14 7v-14zm-260 6v2h-4v-2h4zm6 0v2h-4v-2h4zm6 0v2h-4v-2h4zm6 0v2h-4v-2h4zm6 0v2h-4v-2h4zm6 0v2h-4v-2h4zm6 0v2h-4v-2h4zm6 0v2h-4v-2h4zm6 0v2h-4v-2h4zm6 0v2h-4v-2h4zm6 0v2h-4v-2h4zm6 0v2h-4v-2h4zm6 0v2h-4v-2h4zm6 0v2h-4v-2h4zm6 0v2h-4v-2h4zm6 0v2h-4v-2h4zm6 0v2h-4v-2h4zm6 0v2h-4v-2h4zm6 0v2h-4v-2h4zm6 0v2h-4v-2h4zm6 0v2h-4v-2h4zm6 0v2h-4v-2h4zm6 0v2h-4v-2h4zm6 0v2h-4v-2h4zm6 0v2h-4v-2h4zm6 0v2h-4v-2h4zm6 0v2h-4v-2h4zm6 0v2h-4v-2h4zm6 0v2h-4v-2h4zm6 0v2h-4v-2h4zm6 0v2h-4v-2h4zm6 0v2h-4v-2h4zm6 0v2h-4v-2h4zm6 0v2h-4v-2h4zm6 0v2h-4v-2h4zm6 0v2h-4v-2h4zm6 0v2h-4v-2h4zm6 0v2h-4v-2h4zm6 0v2h-4v-2h4zm6 0v2h-4v-2h4zm6 0v2h-4v-2h4zm6 0v2h-4v-2h4zm6 0v2h-4v-2h4zm6 0v2h-4v-2h4z" transform="matrix(-1 0 0 1 430 0)"/><text id="WebSocket-protocol" fill="#7a7f9c" font-family="OpenSans-Regular, Open Sans" font-size="14" font-weight="normal"><tspan x="146.604" y="272">Протокол WebSocket</tspan></text></g></g></svg>
+		</section>
+		<section>
+			<h3>Пример запроса</h3>
+			<pre><code data-line-numbers="">GET /chat
+Host: javascript.info
+Origin: https://javascript.info
+Connection: Upgrade
+Upgrade: websocket
+Sec-WebSocket-Key: Iv8io/9s+lYFgZWcXczP8Q==
+Sec-WebSocket-Version: 13
+			</code></pre>
+			<p class="fragment" style="font-size: 28px;">
+				Sec-WebSocket-Key – случайный ключ, созданный браузером для обеспечения безопасности.
+			</p>
+			<p class="fragment" style="font-size: 28px;">
+				Sec-WebSocket-Version – версия протокола WebSocket, текущая версия 13.
+			</p>
+		</section>
+        <section>
+          <h3>Установка Laravel</h3>
+          <p>composer require laravel/laravel live-chat</p>
+        </section>
+        <section>
+          <h3>Добавить BROADCAST в .env</h3>
+          <pre><code data-line-numbers="">// .env
+
+BROADCAST_DRIVER=pusher
+		</code>
+		</pre>
+        </section>
+        <section>
+          <h3>Настройка broacast</h3>
+          <pre>
+			<code data-line-numbers="">// config/broadcasting.php
+
+'pusher' => [
+  'driver' => 'pusher',
+  'key' => env('PUSHER_APP_KEY'),
+  'secret' => env('PUSHER_APP_SECRET'),
+  'app_id' => env('PUSHER_APP_ID'),
+  'options' => [],
+			</code>
+		  </pre>
+        </section>
+        <section>
+          <pre><code data-line-numbers="">// .env
+
+PUSHER_APP_ID=xxxxxx
+PUSHER_APP_KEY=xxxxxxxxxxxxxxxxxxxx
+PUSHER_APP_SECRET=xxxxxxxxxxxxxxxxxxxx
+PUSHER_CLUSTER=xx
+
+				</code>
+			</pre>
+        </section>
+        <section>
+          <h3>Зарегистрироваться в pusher</h3>
+          <p>
+            Далее нужно зайти и
+            <a href="https://dashboard.pusher.com/accounts/sign_in"
+              >зарегистироваться</a
+            >
+            в pusher
+          </p>
+        </section>
+      </div>
+    </div>
+
+    <script src="dist/reveal.js"></script>
+    <script src="plugin/notes/notes.js"></script>
+    <script src="plugin/markdown/markdown.js"></script>
+    <script src="plugin/highlight/highlight.js"></script>
+    <script>
+      // More info about initialization & config:
+      // - https://revealjs.com/initialization/
+      // - https://revealjs.com/config/
+      Reveal.initialize({
+        hash: true,
+
+        // Learn about plugins: https://revealjs.com/plugins/
+        plugins: [RevealMarkdown, RevealHighlight, RevealNotes],
+      });
+    </script>
+  </body>
+</html>
