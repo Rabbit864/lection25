@@ -122,6 +122,26 @@ Sec-WebSocket-Version: 13
 				Sec-WebSocket-Version – версия протокола WebSocket, текущая версия 13.
 			</p>
 		</section>
+    <section>
+      <h3>Пример ответа</h3>
+      <pre><code data-line-numbers="">101 Switching Protocols
+Upgrade: websocket
+Connection: Upgrade
+Sec-WebSocket-Accept: hsBlbuDTkk24srzEOTBUlZAlC2g=
+              </code></pre>
+    </section>
+    <section>
+      <h3>Передача данных</h3>
+      <p>
+        Поток данных в WebSocket состоит из «фреймов», фрагментов данных, которые могут быть отправлены любой стороной, и которые могут быть следующих видов:
+      </p>
+      <ul>
+        <li>«текстовые фреймы» – содержат текстовые данные, которые стороны отправляют друг другу.</li>
+        <li>«бинарные фреймы» – содержат бинарные данные, которые стороны отправляют друг другу.</li>
+        <li>«пинг-понг фреймы» используется для проверки соединения; отправляется с сервера, браузер реагирует на них автоматически.</li>
+        <li>также есть «фрейм закрытия соединения» и некоторые другие служебные фреймы.</li>
+      </ul>
+    </section>
         <section>
           <h3>Установка Laravel</h3>
           <p>composer require laravel/laravel live-chat</p>
@@ -168,6 +188,234 @@ PUSHER_CLUSTER=xx
             >
             в pusher
           </p>
+        </section>
+        <section>
+          <h3>Настройка npm</h3>
+          <p>
+            <code>npm install</code>
+          </p>
+          <p>
+            <code>npm install --save laravel-echo pusher-js</code>
+          </p>
+        </section>
+        <section>
+          <h3>Настройка Echo</h3>
+          <pre><code>// resources/assets/js/bootstrap.js
+
+import Echo from "laravel-echo"
+            
+window.Echo = new Echo({
+  broadcaster: 'pusher',
+  key: 'xxxxxxxxxxxxxxxxxxxx',
+  cluster: 'eu',
+  encrypted: true
+              </code>
+
+          </pre>
+        </section>
+        <section>
+          <h3>Добавить auth и настройка бд</h3>
+          <p><pre><code>php artisan make:auth</code></pre></p>
+          <p><pre><code data-line-numbers="">// .env
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=laravel-chat
+DB_USERNAME=root</code></pre></p>
+        </section>
+        <section>
+          <h3>Создаем миграцию для сообщений</h3>
+          <pre><code data-line-numbers="">Schema::create('messages', function (Blueprint $table) {
+  $table->increments('id');
+  $table->integer('user_id')->unsigned();
+  $table->text('message');
+  $table->timestamps();
+});
+          
+            </code></pre>
+            <p>И запускаем</p>
+            <p><pre><code>php artisan migrate</code></pre></p>
+        </section>
+        <section>
+            <h3>Настройка связей</h3>
+            <pre><code>// app/User.php
+
+  /**
+    * A user can have many messages
+    *
+    * @return \Illuminate\Database\Eloquent\Relations\HasMany
+  */
+  public function messages()
+  {
+    return $this->hasMany(Message::class);
+  }
+              </code></pre>
+        </section>
+        <section>
+          <h3>Настройка связей</h3>
+          <pre><code>// app/Message.php
+
+  /**
+  * A message belong to a user
+  *
+  * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+  */
+  public function user()
+  {
+    return $this->belongsTo(User::class);
+  }          
+          </code></pre>
+        </section>
+        <section>
+          <h3>Роуты</h3>
+          <pre><code data-line-numbers="">// routes/web.php
+
+Auth::routes();
+            
+Route::get('/', 'ChatsController@index');
+Route::get('messages', 'ChatsController@fetchMessages');
+Route::post('messages', 'ChatsController@sendMessage');
+            </code></pre>
+        </section>
+        <section>
+          <h3>Создаем Контроллер</h3>
+          <pre><code>php artisan make:controller ChatsController</code></pre>
+          <p><pre><code data-line-numbers="7-10|17-20|27-30|38-47">// app/Http/Controllers/ChatsController.php
+
+use App\Message;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+            
+public function __construct()
+{
+  $this->middleware('auth');
+}
+            
+/**
+* Show chats
+*
+* @return \Illuminate\Http\Response
+*/
+public function index()
+{
+  return view('chat');
+}
+            
+/**
+* Fetch all messages
+ *
+ * @return Message
+*/
+public function fetchMessages()
+{
+  return Message::with('user')->get();
+}
+            
+/**
+* Persist message to database
+*
+* @param  Request $request
+* @return Response
+*/
+  public function sendMessage(Request $request)
+  {
+    $user = Auth::user();
+            
+    $message = $user->messages()->create([
+        'message' => $request->input('message')
+    ]);
+            
+    return ['status' => 'Message Sent!'];
+  }
+            </code></pre></p>
+        </section>
+        <section>
+          <h3>Настройка Events</h3>
+          <p><pre><code>php artisan make:event MessageSent</code></pre></p>
+          <p><pre><code data-line-numbers="17|19|21-25|27-30">// app/Events/MessageSent.php
+
+use App\User;
+use App\Message;
+use Illuminate\Broadcasting\Channel;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Broadcasting\PrivateChannel;
+use Illuminate\Broadcasting\PresenceChannel;
+use Illuminate\Foundation\Events\Dispatchable;
+use Illuminate\Broadcasting\InteractsWithSockets;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+            
+class MessageSent implements ShouldBroadcast
+{
+    use Dispatchable, InteractsWithSockets, SerializesModels;
+              
+    public $user;
+              
+    public $message;
+              
+    public function __construct(User $user, Message $message)
+    {
+      $this->user = $user;
+      $this->message = $message;
+    }
+              
+    public function broadcastOn()
+    {
+      return new PrivateChannel('chat');
+    }
+}
+            </code></pre></p>
+        </section>
+        <section >
+          <h3>Добавление нового метода в контроллер</h3>
+          <p><pre><code data-line-numbers="12-23">// app/Http/Controllers/ChatsController.php
+
+//remember to use
+use App\Events\MessageSent;
+
+/**
+ * Persist message to database
+ *
+ * @param  Request $request
+ * @return Response
+ */
+public function sendMessage(Request $request)
+{
+  $user = Auth::user();
+
+  $message = $user->messages()->create([
+    'message' => $request->input('message')
+  ]);
+
+  broadcast(new MessageSent($user, $message))->toOthers();
+
+  return ['status' => 'Message Sent!'];
+}
+
+          </code></pre></p>
+        </section>
+        <section>
+          <h3>Добавление канала в Laravel</h3>
+          <p><pre><code data-line-numbers="">// routes/channels.php
+
+Broadcast::channel('chat', function ($user) {
+  return Auth::check();
+});
+
+          </code></pre></p>
+        </section>
+        <section>
+          <h3>Прослушавание</h3>
+          <p><pre><code data-line-numbers="">// resources/assets/js/app.js
+
+Echo.private('chat')
+  .listen('MessageSent', (e) => {
+    this.messages.push({
+    message: e.message.message,
+    user: e.user
+  });
+});
+            </code></pre></p>
         </section>
       </div>
     </div>
